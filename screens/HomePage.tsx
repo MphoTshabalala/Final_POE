@@ -1,47 +1,72 @@
 import React, { useState } from 'react';
-import { View, Text, Button, FlatList, TextInput, Alert, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TextInput,
+  Button,
+  Alert,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 
-interface MenuItem {
+export interface MenuItem {
   id: number;
   name: string;
   price: number;
+  course: string;
+  description: string;
 }
 
 const HomeScreen = ({ navigation }) => {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([
-    { id: 1, name: "Pizza", price: 120 },
-    { id: 2, name: "Burger", price: 85 },
-  ]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [itemName, setItemName] = useState('');
+  const [itemPrice, setItemPrice] = useState('');
+  const [description, setDescription] = useState('');
+  const [course, setCourse] = useState('Starters');
 
-  const [newItemName, setNewItemName] = useState('');
-  const [newItemPrice, setNewItemPrice] = useState('');
+  const calculateAveragePrice = (course: string): string => {
+    const items = menuItems.filter((item) => item.course === course);
+    if (items.length === 0) return '0.00';
+    const total = items.reduce((sum, item) => sum + item.price, 0);
+    return (total / items.length).toFixed(2);
+  };
 
-  const totalItems = menuItems.length;
-  const totalPrice = menuItems.reduce((sum, item) => sum + item.price, 0).toFixed(2);
-
-  const addMenuItem = () => {
-    const price = parseFloat(newItemPrice);
-    if (newItemName && !isNaN(price) && price > 0) {
+  const handleAddItem = () => {
+    const price = parseFloat(itemPrice);
+    if (itemName && !isNaN(price) && price > 0 && description && course) {
       const newItem: MenuItem = {
         id: menuItems.length + 1,
-        name: newItemName,
+        name: itemName,
         price,
+        course,
+        description,
       };
-      setMenuItems([...menuItems, newItem]);
-      setNewItemName('');
-      setNewItemPrice('');
+      setMenuItems((prevItems) => [...prevItems, newItem]);
+      setItemName('');
+      setItemPrice('');
+      setDescription('');
+      setCourse('Starters');
     } else {
-      Alert.alert('Error', 'Please enter valid item name and price.');
+      Alert.alert('Error', 'Please fill out all fields correctly.');
     }
   };
 
-  const removeMenuItem = (id: number) => {
-    setMenuItems(menuItems.filter(item => item.id !== id));
-  };
-
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
       <Text style={styles.title}>Welcome to the Restaurant App!</Text>
+      <View style={styles.averageContainer}>
+        <Text style={styles.averageText}>
+          Average Price (Starters): R{calculateAveragePrice('Starters')}
+        </Text>
+        <Text style={styles.averageText}>
+          Average Price (Mains): R{calculateAveragePrice('Mains')}
+        </Text>
+        <Text style={styles.averageText}>
+          Average Price (Drinks): R{calculateAveragePrice('Desert')}
+        </Text>
+      </View>
       <FlatList
         data={menuItems}
         keyExtractor={(item) => item.id.toString()}
@@ -49,89 +74,108 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.itemContainer}>
             <Text style={styles.itemName}>{item.name}</Text>
             <Text style={styles.itemPrice}>R{item.price.toFixed(2)}</Text>
-            <Button title="Remove" onPress={() => removeMenuItem(item.id)} />
+            <Text style={styles.itemDescription}>{item.description}</Text>
+            <Text style={styles.itemCourse}>Category: {item.course}</Text>
+            <Button
+              title="Remove"
+              onPress={() =>
+                setMenuItems((prevItems) =>
+                  prevItems.filter((i) => i.id !== item.id)
+                )
+              }
+            />
           </View>
         )}
       />
-
-      <Text style={styles.summary}>Total Items: {totalItems}</Text>
-      <Text style={styles.summary}>Total Price: R{totalPrice}</Text>
-
       <TextInput
         style={styles.input}
-        placeholder="New Item Name"
-        value={newItemName}
-        onChangeText={setNewItemName}
+        placeholder="Item Name"
+        value={itemName}
+        onChangeText={setItemName}
       />
       <TextInput
         style={styles.input}
-        placeholder="New Item Price"
-        value={newItemPrice}
-        onChangeText={setNewItemPrice}
+        placeholder="Item Price"
+        value={itemPrice}
+        onChangeText={setItemPrice}
         keyboardType="numeric"
       />
-      <Button color={'black'} title="Add Item" onPress={addMenuItem} />
-      
-      <Button color={'grey'} title="Go to Menu" onPress={() => navigation.navigate('Menu')} />
-    </View>
+      <TextInput
+        style={styles.input}
+        placeholder="Description"
+        value={description}
+        onChangeText={setDescription}
+      />
+      <Picker
+        selectedValue={course}
+        onValueChange={(value) => setCourse(value)}
+        style={styles.picker}
+      >
+        <Picker.Item label="Starters" value="Starters" />
+        <Picker.Item label="Mains" value="Mains" />
+        <Picker.Item label="Desert" value="Desert" />
+      </Picker>
+      <Button color={'black'} title="Add Item" onPress={handleAddItem} />
+      <Button
+        color={'black'}
+        title="Go to Menu"
+        onPress={() => navigation.navigate('Menu', { menuItems })}
+      />
+    </ScrollView>
   );
 };
 
- const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
     padding: 20,
-    backgroundColor: '#f8f9fa', // Light background color for overall container
+    backgroundColor: 'white',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
-    color: '#333', // Dark color for title text
+  },
+  averageContainer: {
+    marginBottom: 20,
+  },
+  averageText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
   },
   itemContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderWidth: 1,
+    padding: 10,
+    borderBottomWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    marginBottom: 10,
   },
   itemName: {
     fontSize: 18,
-    color: '#755', // Medium color for item name
   },
   itemPrice: {
     fontSize: 16,
-    color: '#888', // Lighter color for price text
   },
-  summary: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 10,
-    color: '#444', // Dark color for summary text
+  itemDescription: {
+    fontSize: 14,
+    color: '#555',
+  },
+  itemCourse: {
+    fontSize: 14,
+    color: '#777',
+    marginTop: 5,
   },
   input: {
-    width: '100%',
-    height: 50,
-    paddingHorizontal: 15,
     borderWidth: 1,
-    borderColor: '#ccc', // Light gray border
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    marginBottom: 15,
-    fontSize: 16,
+    borderColor: '#ccc',
+    marginBottom: 10,
+    padding: 10,
   },
-  button: {
-    marginVertical: 10, // Vertical spacing for buttons
+  picker: {
+    height: 40,
+    marginBottom: 20,
   },
 });
 
-
 export default HomeScreen;
+

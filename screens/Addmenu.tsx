@@ -1,24 +1,41 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
+import { View, TextInput, Button, Alert, StyleSheet, ScrollView } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { MenuItem } from '../App';
 
-const Addmenu = () => {
+interface AddMenuProps {
+  navigation: any;
+  addMenuItem: (item: MenuItem) => void;
+}
+
+const Addmenu: React.FC<AddMenuProps> = ({ navigation, addMenuItem }) => {
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
   const [course, setCourse] = useState('');
+  const [description, setDescription] = useState('');
 
-  const addItem = () => {
-    if (itemName && itemPrice && course) {
+  const handleAddItem = () => {
+    if (itemName && itemPrice && course && description) {
+      const newItem = { 
+        name: itemName, 
+        price: parseFloat(itemPrice), 
+        course, 
+        description 
+      };
+      addMenuItem(newItem);
       Alert.alert('Item Added', `${itemName} added to ${course}`);
       setItemName('');
       setItemPrice('');
       setCourse('');
+      setDescription('');
+      navigation.navigate('Menu');
     } else {
       Alert.alert('Error', 'Please fill out all fields.');
     }
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <TextInput
         style={styles.input}
         placeholder="Item Name"
@@ -32,40 +49,31 @@ const Addmenu = () => {
         onChangeText={setItemPrice}
         keyboardType="numeric"
       />
+      <Picker
+        selectedValue={course}
+        onValueChange={setCourse}
+        style={styles.picker}
+      >
+        <Picker.Item label="Select Course" value="" />
+        <Picker.Item label="Starter" value="starter" />
+        <Picker.Item label="Mains" value="mains" />
+        <Picker.Item label="Desert" value="desert" />
+      </Picker>
       <TextInput
         style={styles.input}
-        placeholder="Course (main, dessert, drinks)"
-        value={course}
-        onChangeText={setCourse}
+        placeholder="Description"
+        value={description}
+        onChangeText={setDescription}
       />
-      <Button title="Add Item" onPress={addItem} />
-    </View>
+      <Button title="Add Item" onPress={handleAddItem} />
+    </ScrollView>
   );
 };
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-      backgroundColor: '#f8f8f8', // Light background color for the container
-    },
-    input: {
-      width: '100%',
-      height: 50,
-      marginBottom: 20,
-      paddingHorizontal: 15,
-      borderWidth: 1,
-      borderColor: '#ccc', // Light gray border color
-      borderRadius: 8,
-      backgroundColor: '#fff', // White background for inputs
-      fontSize: 16,
-    },
-    button: {
-      marginTop: 10,
-    },
-  })
-  
+const styles = StyleSheet.create({
+  container: { padding: 20 },
+  input: { borderWidth: 1, marginBottom: 10, padding: 10 },
+  picker: { marginBottom: 20 },
+});
 
 export default Addmenu;

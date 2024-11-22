@@ -1,91 +1,42 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Button, ScrollView } from 'react-native';
+import React from 'react';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 
-const menuData = {
-  main: [
-    { name: "Steak", price: 150 },
-    { name: "Salad", price: 90 },
-  ],
-  dessert: [
-    { name: "Ice Cream", price: 50 },
-    { name: "Cake", price: 60 },
-  ],
-  drinks: [
-    { name: "Soda", price: 30 },
-    { name: "Wine", price: 120 },
-  ],
-};
+const Menu = ({ route }) => {
+  const { menuItems } = route.params;
 
-const Menu: React.FC = () => {
-  const [selectedCourse, setSelectedCourse] = useState<keyof typeof menuData | null>(null);
-
-  const renderItems = (course: keyof typeof menuData) => (
-    menuData[course].map(item => (
-      <View key={item.name} style={styles.itemContainer}>
-        <Text style={styles.itemText}>{item.name} - R{item.price.toFixed(2)}</Text>
-      </View>
-    ))
+  const renderItemsByCategory = (category: string) => (
+    menuItems
+      .filter((item: { course: string; }) => item.course === category)
+      .map((item: { id: React.Key | null | undefined; name: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; price: number; description: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; }) => (
+        <View key={item.id} style={styles.itemContainer}>
+          <Text style={styles.itemName}>{item.name}</Text>
+          <Text style={styles.itemPrice}>R{item.price.toFixed(2)}</Text>
+          <Text style={styles.itemDescription}>{item.description}</Text>
+        </View>
+      ))
   );
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Menu</Text>
-      <Button title="Show Mains" onPress={() => setSelectedCourse('main')} />
-      <Button title="Show Desserts" onPress={() => setSelectedCourse('dessert')} />
-      <Button title="Show Drinks" onPress={() => setSelectedCourse('drinks')} />
-
-      {selectedCourse && (
-        <View style={styles.section}>
-          <Text style={styles.heading}>{selectedCourse.toUpperCase()}</Text>
-          {renderItems(selectedCourse)}
-        </View>
-      )}
-    </ScrollView>
+      <Text style={styles.heading}>Starters</Text>
+      {renderItemsByCategory('Starters')}
+      <Text style={styles.heading}>Mains</Text>
+      {renderItemsByCategory('Mains')}
+      <Text style={styles.heading}>Desert</Text>
+      {renderItemsByCategory('Desert')}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f0f2f5', // Light gray background for the menu screen
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
-    color: '#333', // Darker color for title text
-  },
-  section: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    borderColor: '#ddd',
-    borderWidth: 1,
-  },
-  heading: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
-    color: '#444', // Slightly dark color for section headings
-  },
-  itemContainer: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee', // Light border between items
-  },
-  itemText: {
-    fontSize: 18,
-    color: '#555', // Medium color for item text
-  },
-  button: {
-    marginVertical: 10,
-  },
+  container: { flex: 1, padding: 20, backgroundColor: '#f0f2f5' },
+  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
+  heading: { fontSize: 22, fontWeight: 'bold', marginVertical: 10 },
+  itemContainer: { padding: 10, borderBottomWidth: 1, borderColor: '#ddd' },
+  itemName: { fontSize: 18 },
+  itemPrice: { fontSize: 16 },
+  itemDescription: { fontSize: 14, color: '#555' },
 });
 
 export default Menu;
-
